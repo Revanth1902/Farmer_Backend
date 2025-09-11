@@ -1,0 +1,4 @@
+| Method | Endpoint             | Description                                                |
+| ------ | -------------------- | ---------------------------------------------------------- |
+| `POST` | `/api/auth/register` | Register or login using name and mobile number (sends OTP) |
+| `POST` | `/api/auth/verify`   | Verify OTP and issue JWT token                             |
