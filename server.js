@@ -1,14 +1,23 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const cors = require("cors"); // ✅ import cors
+
 dotenv.config();
 
 const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
-app.use(express.json());
+// ✅ Enable CORS
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:3000", // Allow frontend origin
+    credentials: true, // Allow cookies
+  })
+);
 
+app.use(express.json());
 app.use("/api/auth", authRoutes);
 
 mongoose
