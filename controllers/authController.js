@@ -7,27 +7,41 @@ const generateOTP = () =>
 // const sendOtp = require("../utils/sendOtp"); // add this
 
 const register = async (req, res) => {
-  const { name, mobile } = req.body;
+  const { name, mobile, state, district, village } = req.body;
 
-  if (!name || !mobile) {
-    return res.status(400).json({ message: "Name and mobile are required" });
+  if (!name || !mobile || !state || !district || !village) {
+    return res.status(400).json({
+      message:
+        "All fields are required: name, mobile, state, district, village",
+    });
   }
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+  const otp = generateOTP();
+  const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
   let user = await User.findOne({ mobile });
 
   if (!user) {
-    user = await User.create({ name, mobile, otp, otpExpiry });
+    user = await User.create({
+      name,
+      mobile,
+      state,
+      district,
+      village,
+      otp,
+      otpExpiry,
+    });
   } else {
+    // Update OTP and optional details
     user.name = name;
+    user.state = state;
+    user.district = district;
+    user.village = village;
     user.otp = otp;
     user.otpExpiry = otpExpiry;
     await user.save();
   }
 
-  // 👇 Only send real OTP if USE_SMS=true
   if (process.env.USE_SMS === "true") {
     const sent = await sendOtpViaSMS(mobile, otp);
     if (!sent) {
@@ -59,7 +73,18 @@ const verifyOtp = async (req, res) => {
     expiresIn: "1d",
   });
 
-  res.status(200).json({ message: "Login successful", token });
+  res.status(200).json({
+    message: "Login successful",
+    token,
+    user: {
+      id: user._id,
+      name: user.name,
+      mobile: user.mobile,
+      state: user.state,
+      district: user.district,
+      village: user.village,
+    },
+  });
 };
 
 module.exports = { register, verifyOtp };

@@ -6,6 +6,9 @@ const userSchema = new mongoose.Schema(
     mobile: { type: String, required: true, unique: true },
     otp: { type: String },
     otpExpiry: { type: Date },
+    state: { type: String },
+    district: { type: String },
+    village: { type: String },
   },
   { timestamps: true }
 );
