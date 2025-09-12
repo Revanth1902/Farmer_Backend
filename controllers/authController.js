@@ -43,7 +43,7 @@ const register = async (req, res) => {
   }
 
   if (process.env.USE_SMS === "true") {
-    const sent = await sendOtpViaSMS(mobile, otp);
+    const sent = await sendOtp(mobile, otp);
     if (!sent) {
       return res.status(500).json({ message: "Failed to send OTP" });
     }
