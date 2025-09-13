@@ -3,30 +3,31 @@ const axios = require("axios");
 const sendOtp = async (mobile, otp) => {
   try {
     const response = await axios.post(
-      "https://www.fast2sms.com/dev/bulkV2",
+      "https://your-whatsapp-api.com/send", // ⬅️ Replace with your API endpoint
       {
-        variables_values: otp,
-        route: "otp",
-        numbers: mobile,
+        to: `+91${mobile}`, // or just `mobile`, depending on your API
+        message: `Your OTP is: ${otp}`,
+        // other required fields based on your API
       },
       {
         headers: {
-          authorization: process.env.FAST2SMS_API_KEY,
+          Authorization: `Bearer ${process.env.WHATSAPP_API_KEY}`, // or your required auth
           "Content-Type": "application/json",
         },
       }
     );
 
-    if (response.data.return) {
-      console.log("✅ OTP sent to", mobile);
+    // Adjust condition based on your API's response
+    if (response.data.success) {
+      console.log("✅ OTP sent via WhatsApp to", mobile);
       return true;
     } else {
-      console.error("❌ Failed to send OTP:", response.data.message);
+      console.error("❌ Failed to send WhatsApp OTP:", response.data.message);
       return false;
     }
   } catch (error) {
     console.error(
-      "❌ Fast2SMS API error:",
+      "❌ WhatsApp OTP API error:",
       error.response?.data || error.message
     );
     return false;
