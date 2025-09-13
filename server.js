@@ -12,8 +12,8 @@ const app = express();
 // ✅ Enable CORS
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000", // Allow frontend origin
-    credentials: true, // Allow cookies
+    origin: "https://kerala-farmers.vercel.app" || "http://localhost:3000", // Replace with your frontend URL
+    credentials: true, // Allow cookies or authorization headers
   })
 );
 
