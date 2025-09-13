@@ -68,34 +68,31 @@ const register = async (req, res) => {
 // ========================
 const verifyOtp = async (req, res) => {
   const { mobile, otp } = req.body;
+  console.log(`Verify OTP attempt: mobile=${mobile}, otp=${otp}`);
 
   const user = await User.findOne({ mobile });
+  if (!user) {
+    console.log("User not found");
+    return res.status(400).json({ message: "Invalid or expired OTP" });
+  }
+  console.log(`User OTP: ${user.otp}, Expiry: ${user.otpExpiry}`);
 
-  if (!user || user.otp !== otp || user.otpExpiry < new Date()) {
+  if (user.otp !== otp) {
+    console.log("OTP does not match");
+    return res.status(400).json({ message: "Invalid or expired OTP" });
+  }
+  if (user.otpExpiry < new Date()) {
+    console.log("OTP expired");
     return res.status(400).json({ message: "Invalid or expired OTP" });
   }
 
-  // OTP is correct
   user.otp = null;
   user.otpExpiry = null;
   await user.save();
 
-  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-    expiresIn: "1d",
-  });
-
-  res.status(200).json({
-    message: "Login successful",
-    token,
-    user: {
-      id: user._id,
-      name: user.name,
-      mobile: user.mobile,
-      state: user.state,
-      district: user.district,
-      village: user.village,
-    },
-  });
+  // Create JWT and respond
+  ...
 };
+
 
 module.exports = { register, verifyOtp };
