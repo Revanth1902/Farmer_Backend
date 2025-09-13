@@ -1,11 +1,14 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const sendOtp = require("../utils/sendOtp");
+
+// OTP Generator
 const generateOTP = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
-// const sendOtp = require("../utils/sendOtp"); // add this
-
+// ========================
+// Register Controller
+// ========================
 const register = async (req, res) => {
   const { name, mobile, state, district, village } = req.body;
 
@@ -17,7 +20,7 @@ const register = async (req, res) => {
   }
 
   const otp = generateOTP();
-  const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+  const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // OTP valid for 5 minutes
 
   let user = await User.findOne({ mobile });
 
@@ -32,7 +35,7 @@ const register = async (req, res) => {
       otpExpiry,
     });
   } else {
-    // Update OTP and optional details
+    // Update OTP and user details
     user.name = name;
     user.state = state;
     user.district = district;
@@ -42,20 +45,27 @@ const register = async (req, res) => {
     await user.save();
   }
 
+  // ✅ NEW: Handle Test Mode vs Real SMS
   if (process.env.USE_SMS === "true") {
     const sent = await sendOtp(mobile, otp);
     if (!sent) {
       return res.status(500).json({ message: "Failed to send OTP" });
     }
-  } else {
-    console.log(`🔁 [Test Mode] OTP for ${mobile} is ${otp}`);
-  }
 
-  return res
-    .status(200)
-    .json({ message: "OTP sent (or printed in test mode)" });
+    return res.status(200).json({ message: "OTP sent successfully" });
+  } else {
+    // In test mode, return the OTP in the response
+    console.log(`🔁 [Test Mode] OTP for ${mobile}: ${otp}`);
+    return res.status(200).json({
+      message: "OTP (test mode)",
+      otp, // ⚠️ Only return in test mode
+    });
+  }
 };
 
+// ========================
+// Verify OTP Controller
+// ========================
 const verifyOtp = async (req, res) => {
   const { mobile, otp } = req.body;
 
@@ -65,6 +75,7 @@ const verifyOtp = async (req, res) => {
     return res.status(400).json({ message: "Invalid or expired OTP" });
   }
 
+  // OTP is correct
   user.otp = null;
   user.otpExpiry = null;
   await user.save();
