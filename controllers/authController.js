@@ -45,13 +45,14 @@ const register = async (req, res) => {
     await user.save();
   }
 
-  // ✅ NEW: Handle Test Mode vs Real SMS
+  console.log(`Saved OTP for ${mobile}: ${otp}, expires at ${otpExpiry}`);
+
+  // Handle Test Mode vs Real SMS
   if (process.env.USE_SMS === "true") {
     const sent = await sendOtp(mobile, otp);
     if (!sent) {
       return res.status(500).json({ message: "Failed to send OTP" });
     }
-
     return res.status(200).json({ message: "OTP sent successfully" });
   } else {
     // In test mode, return the OTP in the response
@@ -75,24 +76,41 @@ const verifyOtp = async (req, res) => {
     console.log("User not found");
     return res.status(400).json({ message: "Invalid or expired OTP" });
   }
+
   console.log(`User OTP: ${user.otp}, Expiry: ${user.otpExpiry}`);
 
-  if (user.otp !== otp) {
+  // Trim OTP strings to avoid whitespace issues
+  if ((user.otp?.trim() || "") !== (otp?.trim() || "")) {
     console.log("OTP does not match");
     return res.status(400).json({ message: "Invalid or expired OTP" });
   }
-  if (user.otpExpiry < new Date()) {
+
+  if (!user.otpExpiry || user.otpExpiry < new Date()) {
     console.log("OTP expired");
     return res.status(400).json({ message: "Invalid or expired OTP" });
   }
 
+  // Clear OTP and expiry after successful verification
   user.otp = null;
   user.otpExpiry = null;
   await user.save();
 
-  // Create JWT and respond
-  ...
-};
+  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "1d",
+  });
 
+  res.status(200).json({
+    message: "Login successful",
+    token,
+    user: {
+      id: user._id,
+      name: user.name,
+      mobile: user.mobile,
+      state: user.state,
+      district: user.district,
+      village: user.village,
+    },
+  });
+};
 
 module.exports = { register, verifyOtp };
