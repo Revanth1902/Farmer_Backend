@@ -9,11 +9,21 @@ const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
-// ✅ Enable CORS
+const allowedOrigins = [
+  "https://kerala-farmers.vercel.app",
+  "http://localhost:3000",
+];
+
 app.use(
   cors({
-    origin: "https://kerala-farmers.vercel.app" || "http://localhost:3000", // Replace with your frontend URL
-    credentials: true, // Allow cookies or authorization headers
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
   })
 );
 

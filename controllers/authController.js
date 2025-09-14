@@ -9,6 +9,50 @@ const generateOTP = () =>
 // ========================
 // Register Controller
 // ========================
+// ========================
+// Login Controller
+// ========================
+const login = async (req, res) => {
+  const { mobile } = req.body;
+
+  if (!mobile) {
+    return res.status(400).json({ message: "Mobile number is required" });
+  }
+
+  const user = await User.findOne({ mobile });
+
+  if (!user) {
+    return res
+      .status(404)
+      .json({ message: "User not found. Please register." });
+  }
+
+  const otp = generateOTP();
+  const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+  user.otp = otp;
+  user.otpExpiry = otpExpiry;
+  await user.save();
+
+  console.log(`Saved OTP for ${mobile}: ${otp}, expires at ${otpExpiry}`);
+
+  // Handle Test Mode vs Real SMS
+  if (process.env.USE_SMS === "true") {
+    const sent = await sendOtp(mobile, otp);
+    if (!sent) {
+      return res.status(500).json({ message: "Failed to send OTP" });
+    }
+    return res.status(200).json({ message: "OTP sent successfully" });
+  } else {
+    // In test mode, return the OTP in the response
+    console.log(`🔁 [Test Mode] OTP for ${mobile}: ${otp}`);
+    return res.status(200).json({
+      message: "OTP (test mode)",
+      otp, // ⚠️ Only return in test mode
+    });
+  }
+};
+
 const register = async (req, res) => {
   const { name, mobile, state, district, village } = req.body;
 
@@ -113,4 +157,4 @@ const verifyOtp = async (req, res) => {
   });
 };
 
-module.exports = { register, verifyOtp };
+module.exports = { register, verifyOtp, login };
