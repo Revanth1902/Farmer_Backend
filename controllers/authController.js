@@ -158,24 +158,27 @@ const verifyOtp = async (req, res) => {
 };
 const updateUserDetails = async (req, res) => {
   try {
-    const userId = req.userId; // assume you have middleware that sets req.userId from JWT
-    const { name, state, district, village } = req.body;
+    const { mobile, name, state, district, village } = req.body;
 
-    // Find user
-    const user = await User.findById(userId);
+    if (!mobile) {
+      return res.status(400).json({ message: "Mobile number is required" });
+    }
+
+    // Find user by mobile number
+    const user = await User.findOne({ mobile });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Update fields if present
+    // Update only provided fields
     if (name) user.name = name;
     if (state) user.state = state;
     if (district) user.district = district;
     if (village) user.village = village;
 
-    // If file uploaded, save imageUrl
+    // Handle image from req.file (Cloudinary + Multer must be set up)
     if (req.file && req.file.path) {
-      user.imageUrl = req.file.path; // multer-cloudinary sets the URL in file.path
+      user.imageUrl = req.file.path;
     }
 
     await user.save();
@@ -189,7 +192,7 @@ const updateUserDetails = async (req, res) => {
         state: user.state,
         district: user.district,
         village: user.village,
-        imageUrl: user.imageUrl,
+        imageUrl: user.imageUrl || null,
       },
     });
   } catch (error) {
@@ -197,5 +200,4 @@ const updateUserDetails = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 module.exports = { register, verifyOtp, login, updateUserDetails };
