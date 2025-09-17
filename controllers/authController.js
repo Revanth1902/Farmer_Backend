@@ -156,5 +156,46 @@ const verifyOtp = async (req, res) => {
     },
   });
 };
+const updateUserDetails = async (req, res) => {
+  try {
+    const userId = req.userId; // assume you have middleware that sets req.userId from JWT
+    const { name, state, district, village } = req.body;
 
-module.exports = { register, verifyOtp, login };
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update fields if present
+    if (name) user.name = name;
+    if (state) user.state = state;
+    if (district) user.district = district;
+    if (village) user.village = village;
+
+    // If file uploaded, save imageUrl
+    if (req.file && req.file.path) {
+      user.imageUrl = req.file.path; // multer-cloudinary sets the URL in file.path
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      message: "User updated successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        mobile: user.mobile,
+        state: user.state,
+        district: user.district,
+        village: user.village,
+        imageUrl: user.imageUrl,
+      },
+    });
+  } catch (error) {
+    console.error("Update error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = { register, verifyOtp, login, updateUserDetails };

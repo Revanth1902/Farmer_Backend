@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema(
     state: { type: String },
     district: { type: String },
     village: { type: String },
+    imageUrl: { type: String }, // <-- add this line
   },
   { timestamps: true }
 );
