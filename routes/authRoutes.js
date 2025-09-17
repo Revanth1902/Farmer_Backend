@@ -18,7 +18,6 @@ module.exports = router;
 
 router.put(
   "/update",
-  authenticate,
   parser.single("image"), // multer middleware to parse 'image' file from form-data
   updateUserDetails
 );
