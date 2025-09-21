@@ -9,7 +9,13 @@ const userSchema = new mongoose.Schema(
     state: { type: String },
     district: { type: String },
     village: { type: String },
-    imageUrl: { type: String }, // <-- add this line
+    landType: { type: String }, // Added
+    farmSize: { type: String }, // Added
+    prevCrops: { type: String }, // Added
+    presentCrop: { type: String }, // Added
+    latitude: { type: String }, // Added
+    longitude: { type: String }, // Added
+    imageUrl: { type: String },
   },
   { timestamps: true }
 );
