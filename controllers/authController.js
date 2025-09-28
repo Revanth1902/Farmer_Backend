@@ -205,8 +205,8 @@ const verifyOtp = async (req, res) => {
 // Update Profile Details (without image)
 const updateProfileDetails = async (req, res) => {
   try {
-    const userId = req.userId; // from JWT middleware
     const {
+      mobile,
       name,
       state,
       district,
@@ -219,8 +219,17 @@ const updateProfileDetails = async (req, res) => {
       longitude,
     } = req.body;
 
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!mobile) {
+      return res
+        .status(400)
+        .json({ message: "Mobile number is required to identify user" });
+    }
+
+    const user = await User.findOne({ mobile });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     if (name) user.name = name;
     if (state) user.state = state;
@@ -248,12 +257,21 @@ const updateProfileDetails = async (req, res) => {
 // Update Profile Image only
 const updateProfileImage = async (req, res) => {
   try {
-    const userId = req.userId; // from JWT middleware
-    if (!req.file || !req.file.path)
-      return res.status(400).json({ message: "Image file is required" });
+    const { mobile } = req.body;
 
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!mobile) {
+      return res.status(400).json({ message: "Mobile number is required" });
+    }
+
+    if (!req.file || !req.file.path) {
+      return res.status(400).json({ message: "Image file is required" });
+    }
+
+    const user = await User.findOne({ mobile });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     user.imageUrl = req.file.path;
     await user.save();
