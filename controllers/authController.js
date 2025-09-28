@@ -200,7 +200,10 @@ const verifyOtp = async (req, res) => {
 // ========================
 // Update User Details Controller
 // ========================
-const updateUserDetails = async (req, res) => {
+// Controller functions in authController.js
+
+// Update Profile Details (without image)
+const updateProfileDetails = async (req, res) => {
   try {
     const userId = req.userId; // from JWT middleware
     const {
@@ -217,11 +220,8 @@ const updateUserDetails = async (req, res) => {
     } = req.body;
 
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Update all fields except mobile
     if (name) user.name = name;
     if (state) user.state = state;
     if (district) user.district = district;
@@ -233,33 +233,53 @@ const updateUserDetails = async (req, res) => {
     if (latitude) user.latitude = latitude;
     if (longitude) user.longitude = longitude;
 
-    if (req.file && req.file.path) {
-      user.imageUrl = req.file.path;
-    }
-
     await user.save();
 
     res.status(200).json({
-      message: "User updated successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        mobile: user.mobile,
-        state: user.state,
-        district: user.district,
-        village: user.village,
-        landType: user.landType,
-        farmSize: user.farmSize,
-        prevCrops: user.prevCrops,
-        presentCrop: user.presentCrop,
-        latitude: user.latitude,
-        longitude: user.longitude,
-        imageUrl: user.imageUrl,
-      },
+      message: "Profile updated successfully",
+      user,
     });
   } catch (error) {
-    console.error("Update error:", error);
+    console.error("Update profile error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-module.exports = { register, verifyOtp, login, updateUserDetails };
+
+// Update Profile Image only
+const updateProfileImage = async (req, res) => {
+  try {
+    const userId = req.userId; // from JWT middleware
+    if (!req.file || !req.file.path)
+      return res.status(400).json({ message: "Image file is required" });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.imageUrl = req.file.path;
+    await user.save();
+
+    res.status(200).json({
+      message: "Profile image updated successfully",
+      imageUrl: user.imageUrl,
+    });
+  } catch (error) {
+    console.error("Update image error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = {
+  register,
+  verifyOtp,
+  login,
+  updateProfileDetails,
+  updateProfileImage,
+};
+
+module.exports = {
+  register,
+  verifyOtp,
+  login,
+  updateProfileDetails,
+  updateProfileImage,
+};

@@ -4,7 +4,8 @@ const {
   register,
   verifyOtp,
   login,
-  updateUserDetails,
+  updateProfileDetails,
+  updateProfileImage,
 } = require("../controllers/authController");
 
 const parser = require("../middlewares/upload");
@@ -16,10 +17,15 @@ router.post("/login", login); // ✅ New login route
 
 module.exports = router;
 
+// In routes/auth.js
 router.put(
-  "/update",
-  parser.single("image"), // multer middleware to parse 'image' file from form-data
-  updateUserDetails
+  "/update-profile", // JWT middleware to set req.userId
+  updateProfileDetails
+);
+router.put(
+  "/update-image",
+  parser.single("image"), // multer middleware
+  updateProfileImage
 );
 
 module.exports = router;
